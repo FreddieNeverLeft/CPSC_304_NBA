@@ -206,7 +206,7 @@
         echo "<br> creating Stadium <br>";
         executePlainSQL("CREATE TABLE Stadium (
             stid 			int			PRIMARY KEY, 		
-            stname		 	char(20),
+            stname		 	char(50),
             capacity 		int,
             stlocation		char(50)		UNIQUE
             )");
@@ -329,6 +329,82 @@
             FOREIGN KEY(gid) REFERENCES Playoff,
             FOREIGN KEY(rid) REFERENCES Referee
             )");
+
+        echo "<br> creating inserts <br>";
+        executePlainSQL("INSERT INTO Stadium VALUES(1, 'Madison Square Garden', 20789, 'New York')");
+        executePlainSQL("INSERT INTO Stadium VALUES(2, 'Crypto.com Arena', 20000, 'Los Angeles')");
+        executePlainSQL("INSERT INTO Stadium VALUES(3, 'United Center', 23500, 'Chicago')");
+        executePlainSQL("INSERT INTO Stadium VALUES(4, 'UWells Fargo Center', 19500, 'Philadelphia')");
+        executePlainSQL("INSERT INTO Stadium VALUES(5, 'Footprint Center', 18422, 'Phoenix')");
+
+        executePlainSQL("INSERT INTO Coach VALUES('Tom Thibodeau', 4375000)");
+        executePlainSQL("INSERT INTO Coach VALUES('Frank Vogel', 4000000)");
+        executePlainSQL("INSERT INTO Coach VALUES('Doc Rivers', 12365000)");
+        executePlainSQL("INSERT INTO Coach VALUES('Billy Donovan', 5000000)");
+        executePlainSQL("INSERT INTO Coach VALUES('Monty Williams', 10000000)");
+
+        executePlainSQL("INSERT INTO Team_Location VALUES('New York', 'East')");
+        executePlainSQL("INSERT INTO Team_Location VALUES('Los Angeles', 'West')");
+        executePlainSQL("INSERT INTO Team_Location VALUES('Chicago', 'East')");
+        executePlainSQL("INSERT INTO Team_Location VALUES('Philadelphia', 'East')");
+        executePlainSQL("INSERT INTO Team_Location VALUES('Phoenix', 'West')");
+
+        executePlainSQL("INSERT INTO Team_Info VALUES('Knicks', 'Tom Thibodeau', 1,  TO_DATE('1968-01-01', 'YYYY-MM-DD'), 'New York', 1946, 'Scott Perry')");
+        executePlainSQL("INSERT INTO Team_Info VALUES('Lakers', 'Frank Vogel', 2,  TO_DATE('1999-01-01', 'YYYY-MM-DD'), 'Los Angeles', 1947, 'Rob Pelinka')");
+        executePlainSQL("INSERT INTO Team_Info VALUES('Bulls', 'Billy Donovan', 3,  TO_DATE('1994-01-01', 'YYYY-MM-DD'), 'Chicago', 1966, 'Marc Eversley')");
+        executePlainSQL("INSERT INTO Team_Info VALUES('76ers', 'Doc Rivers',4 ,TO_DATE('1996-01-01', 'YYYY-MM-DD'), 'Philadelphia', 1946, 'Daryl Morey')");
+        executePlainSQL("INSERT INTO Team_Info VALUES('Suns', 'Monty Williams', 5, TO_DATE('1992-01-01', 'YYYY-MM-DD'), 'Phoenix', 1968, 'James Jones')");
+
+        executePlainSQL("INSERT INTO Player_Team_Name VALUES('Bulls', 11, 'Demar Derozan')");
+        executePlainSQL("INSERT INTO Player_Team_Name VALUES('76ers', 21, 'Joel Embiid')");
+        executePlainSQL("INSERT INTO Player_Team_Name VALUES('Lakers', 6, 'Lebron James')");
+        executePlainSQL("INSERT INTO Player_Team_Name VALUES('Suns', 3, 'Chris Paul')");
+        executePlainSQL("INSERT INTO Player_Team_Name VALUES('Knicks', 9, 'RJ Barrett')");
+        
+        executePlainSQL("INSERT INTO Player_Stats_Only VALUES(1,11,'Lakers',6,4,41180544,'$0.00','Front','American',37,52,206)");
+        executePlainSQL("INSERT INTO Player_Stats_Only VALUES(2,12,'Suns',3,4,30800000,'$0.00','Back','American',33,49,183)");
+        executePlainSQL("INSERT INTO Player_Stats_Only VALUES(3,13,'76ers',21,5,31579390,'$0.00','Front','American',28, 49, 213)");
+        executePlainSQL("INSERT INTO Player_Stats_Only VALUES(4,14, 'Bulls',11,3,26000000,'$0.00','Front','American',32,52,198)");
+        executePlainSQL("INSERT INTO Player_Stats_Only VALUES(5,15, 'Knicks',9,3,8623920,'$0.00','Front','Canadian',21,42,198)");
+        
+        executePlainSQL("INSERT INTO Injury VALUES(1, 'Knee Soreness', 3, 'Knee')");
+        executePlainSQL("INSERT INTO Injury VALUES(1, 'Back Spasms', 3,'Back')");
+        executePlainSQL("INSERT INTO Injury VALUES(3, 'Ankle Sprain', 4, 'Ankle')");
+        executePlainSQL("INSERT INTO Injury VALUES(2, 'Back Soreness', 4,'Back')");
+        executePlainSQL("INSERT INTO Injury VALUES(5, 'Neck Soreness', 2, 'Neck')");
+
+        executePlainSQL("INSERT INTO Referee VALUES(1,5,54)");
+        executePlainSQL("INSERT INTO Referee VALUES(2,5,67)");
+        executePlainSQL("INSERT INTO Referee VALUES(3,26,47)");
+        executePlainSQL("INSERT INTO Referee VALUES(4,13,36)");
+        executePlainSQL("INSERT INTO Referee VALUES(5,14,74)");
+        executePlainSQL("INSERT INTO Referee VALUES(6,7,43)");
+        executePlainSQL("INSERT INTO Referee VALUES(7,10,22)");
+        executePlainSQL("INSERT INTO Referee VALUES(8,11,11)");
+
+        executePlainSQL("INSERT INTO Regular VALUES(1,1,'Knicks','Lakers',TO_DATE('2022-03-02', 'YYYY-MM-DD'),111,98,1)");
+        executePlainSQL("INSERT INTO Regular VALUES(2,2,'Lakers','Bulls',TO_DATE('2022-02-28', 'YYYY-MM-DD'),123,88,0)");
+        executePlainSQL("INSERT INTO Regular VALUES(3,3,'Bulls','76ers', TO_DATE('2021-10-31', 'YYYY-MM-DD'),108,97,0)");
+        executePlainSQL("INSERT INTO Regular VALUES(4,4,'76ers','Suns', TO_DATE('2021-11-22', 'YYYY-MM-DD'),122,125,0)");
+        executePlainSQL("INSERT INTO Regular VALUES(5,5,'Suns','Knicks',TO_DATE('2022-01-15', 'YYYY-MM-DD'),98,125,0)");
+
+        executePlainSQL("INSERT INTO Playoff VALUES(6,4,'76ers','Knicks',TO_DATE('2022-05-19', 'YYYY-MM-DD'),123,81,1,2)");
+        executePlainSQL("INSERT INTO Playoff VALUES(7,5,'Suns','Lakers',TO_DATE('2022-05-21', 'YYYY-MM-DD'),130,84,1,3)");
+        executePlainSQL("INSERT INTO Playoff VALUES(8,3,'Bulls','76ers',TO_DATE('2022-06-17', 'YYYY-MM-DD'),99,97,2,4)");
+        executePlainSQL("INSERT INTO Playoff VALUES(9,1,'76ers','Knicks',TO_DATE('2022-05-12', 'YYYY-MM-DD'),101,113,1,7)");
+        executePlainSQL("INSERT INTO Playoff VALUES(10,2,'Suns','Lakers',TO_DATE('2022-05-22', 'YYYY-MM-DD'),118,112,1,6)");
+
+        executePlainSQL("INSERT INTO moderate_Regular VALUES(1,1)");
+        executePlainSQL("INSERT INTO moderate_Regular VALUES(2,2)");
+        executePlainSQL("INSERT INTO moderate_Regular VALUES(3,3)");
+        executePlainSQL("INSERT INTO moderate_Regular VALUES(4,4)");
+        executePlainSQL("INSERT INTO moderate_Regular VALUES(5,5)");
+
+        executePlainSQL("INSERT INTO moderate_Playoff VALUES(6,1)");
+        executePlainSQL("INSERT INTO moderate_Playoff VALUES(7,2)");
+        executePlainSQL("INSERT INTO moderate_Playoff VALUES(8,6)");
+        executePlainSQL("INSERT INTO moderate_Playoff VALUES(9,7)");
+        executePlainSQL("INSERT INTO moderate_Playoff VALUES(10,8)");
 
         OCICommit($db_conn);
     }
