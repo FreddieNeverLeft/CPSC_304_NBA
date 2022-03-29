@@ -29,7 +29,7 @@
     <hr />
 
     <h2>Update Name in Coach</h2>
-    <p>The values are case sensitive and if you enter in the wrong case, the update statement will not do anything.</p>
+    <p>The values are case sensitive.</p>
 
     <form method="POST" action="admin.php">
         <!--refresh page when submitted-->
@@ -47,6 +47,73 @@
         <!--refresh page when submitted-->
         <input type="hidden" id="countTupleRequest" name="countTupleRequest">
         <input type="submit" name="countTuples"></p>
+    </form>
+
+    <hr />
+
+    <h2>Find the score for the regular home games where the Lakers won:</h2>
+    <p>SELECT tname, home_pts <br>
+        FROM Team_Info, Regular <br>
+        WHERE tname = 'Lakers' and home_tname = tname and home_pts > away_pts</p>
+    <form method="GET" action="admin.php">
+        <!--refresh page when submitted-->
+        <input type="hidden" id="selectTupleRequest" name="selectTupleRequest">
+        <input type="submit" name="selectTuples"></p>
+    </form>
+
+    <hr />
+
+    <h2> Find the what the average amount of points each team scored at home:</h2>
+    <p>SELECT home_tname, avg(home_pts)<br>
+        FROM Regular<br>
+        GROUP BY home_tname</p>
+    <form method="GET" action="admin.php">
+        <!--refresh page when submitted-->
+        <input type="hidden" id="avgTupleRequest" name="avgTupleRequest">
+        <input type="submit" name="avgTuples"></p>
+    </form>
+
+    <hr />
+
+    <h2> Find which team has the player with the lowest shooting percentage:</h2>
+    <p>SELECT a.tname, a.avg_shooting_perc<br>
+    FROM (SELECT tname, avg_shooting_perc = avg(shooting_perc)<br>
+    &emsp;&ensp;FROM Player_Stats_Only<br>
+    &emsp;&ensp;GROUP BY tname<br>
+    ) AS a<br>
+    WHERE a.avg_shooting_perc = (SELECT min(avg_shooting_perc) FROM (SELECT tname, avg(shooting_perc) avg_shooting_perc FROM Player_Stats_Only GROUP BY tname)) </p>
+    <form method="GET" action="admin.php">
+        <!--refresh page when submitted-->
+        <input type="hidden" id="leastTupleRequest" name="leastTupleRequest">
+        <input type="submit" name="leastTuples"></p>
+    </form>
+
+    <hr />
+
+    <h2> Find which team has the player with the lowest shooting percentage (With view):</h2>
+    <p>WITH a(tname, avg_shooting_perc) as (SELECT tname, avg(shooting_perc) avg_shooting_perc FROM Player_Stats_Only GROUP BY tname)<br>
+    SELECT a.tname , a.avg_shooting_perc<br>
+    FROM a<br>
+    WHERE a.avg_shooting_perc = (SELECT min(avg_shooting_perc) FROM a)</p>
+    <form method="GET" action="admin.php">
+        <!--refresh page when submitted-->
+        <input type="hidden" id="leastTupleRequest" name="leastTupleRequest">
+        <input type="submit" name="leastViewTuples"></p>
+    </form>
+
+    <hr />
+
+    <h2> Find all the games that were officiated by all referees with more than 20 years of experience：</h2>
+    <p> SELECT gid FROM Regular r<br>
+    WHERE NOT EXISTS (( SELECT Referee.rid FROM Referee WHERE yearsExperience > 20)<br>
+    MINUS<br>
+    (SELECT mr.rid<br>
+    FROM moderate_Regular mr <br>
+    WHERE mr.gid = r.gid)</p>
+    <form method="GET" action="admin.php">
+        <!--refresh page when submitted-->
+        <input type="hidden" id="divTupleRequest" name="divTupleRequest">
+        <input type="submit" name="divTuples"></p>
     </form>
 
     <?php
@@ -180,7 +247,7 @@
 
         $result = executePlainSQL("SELECT * FROM coach");
         printResult($result);
-        
+
         oci_free_statement($result);
     }
 
@@ -223,7 +290,7 @@
             conference	char(20)	NOT NULL,
             PRIMARY KEY(city)
             )");
-        
+
         echo "<br> creating Team_Info table <br>";
         executePlainSQL("CREATE TABLE Team_Info (
             tname 			char(20)		PRIMARY KEY, 
@@ -312,7 +379,7 @@
             FOREIGN KEY(away_tname) REFERENCES Team_Info,
             FOREIGN KEY(stid) REFERENCES Stadium
             )");
-        
+
         echo "<br> creating moderate <br>";
         executePlainSQL("CREATE TABLE moderate_Regular(
             gid 		int, 
@@ -321,7 +388,7 @@
             FOREIGN KEY(gid) REFERENCES Regular,
             FOREIGN KEY(rid) REFERENCES Referee
             )");
-        
+
         executePlainSQL("CREATE TABLE moderate_Playoff(
             gid 	int, 
             rid		int,  		 
@@ -360,13 +427,13 @@
         executePlainSQL("INSERT INTO Player_Team_Name VALUES('Lakers', 6, 'Lebron James')");
         executePlainSQL("INSERT INTO Player_Team_Name VALUES('Suns', 3, 'Chris Paul')");
         executePlainSQL("INSERT INTO Player_Team_Name VALUES('Knicks', 9, 'RJ Barrett')");
-        
+
         executePlainSQL("INSERT INTO Player_Stats_Only VALUES(1,11,'Lakers',6,4,41180544,'$0.00','Front','American',37,52,206)");
         executePlainSQL("INSERT INTO Player_Stats_Only VALUES(2,12,'Suns',3,4,30800000,'$0.00','Back','American',33,49,183)");
         executePlainSQL("INSERT INTO Player_Stats_Only VALUES(3,13,'76ers',21,5,31579390,'$0.00','Front','American',28, 49, 213)");
         executePlainSQL("INSERT INTO Player_Stats_Only VALUES(4,14, 'Bulls',11,3,26000000,'$0.00','Front','American',32,52,198)");
         executePlainSQL("INSERT INTO Player_Stats_Only VALUES(5,15, 'Knicks',9,3,8623920,'$0.00','Front','Canadian',21,42,198)");
-        
+
         executePlainSQL("INSERT INTO Injury VALUES(1, 'Knee Soreness', 3, 'Knee')");
         executePlainSQL("INSERT INTO Injury VALUES(1, 'Back Spasms', 3,'Back')");
         executePlainSQL("INSERT INTO Injury VALUES(3, 'Ankle Sprain', 4, 'Ankle')");
@@ -381,6 +448,7 @@
         executePlainSQL("INSERT INTO Referee VALUES(6,7,43)");
         executePlainSQL("INSERT INTO Referee VALUES(7,10,22)");
         executePlainSQL("INSERT INTO Referee VALUES(8,11,11)");
+        executePlainSQL("INSERT INTO Referee VALUES(9,28,48)");
 
         executePlainSQL("INSERT INTO Regular VALUES(1,1,'Knicks','Lakers',TO_DATE('2022-03-02', 'YYYY-MM-DD'),111,98,1)");
         executePlainSQL("INSERT INTO Regular VALUES(2,2,'Lakers','Bulls',TO_DATE('2022-02-28', 'YYYY-MM-DD'),123,88,0)");
@@ -397,6 +465,7 @@
         executePlainSQL("INSERT INTO moderate_Regular VALUES(1,1)");
         executePlainSQL("INSERT INTO moderate_Regular VALUES(2,2)");
         executePlainSQL("INSERT INTO moderate_Regular VALUES(3,3)");
+        executePlainSQL("INSERT INTO moderate_Regular VALUES(3,9)");
         executePlainSQL("INSERT INTO moderate_Regular VALUES(4,4)");
         executePlainSQL("INSERT INTO moderate_Regular VALUES(5,5)");
 
@@ -428,7 +497,102 @@
 
         $result = executePlainSQL("SELECT * FROM coach");
         printResult($result);
-        
+
+        oci_free_statement($result);
+    }
+
+    function handleSelectRequest()
+    {
+        global $db_conn;
+
+        $result = executePlainSQL("SELECT tname, home_pts FROM Team_Info, Regular WHERE tname = 'Lakers' and home_tname = tname and home_pts > away_pts");
+
+        echo "<table>";
+        echo "<tr><th>Team Name</th><th>&emsp;Points</th></tr>";
+
+        while (($row = OCI_Fetch_Array($result, OCI_BOTH)) != false) {
+            echo "<tr><td>" . $row[0] . "</td><td>&emsp;" . $row[1] . "</td></tr>"; //or just use "echo $row[0]"
+        }
+
+        echo "</table>";
+        oci_free_statement($result);
+    }
+
+    function handleAvgRequest()
+    {
+        global $db_conn;
+
+        $result = executePlainSQL("SELECT home_tname, avg(home_pts) FROM Regular GROUP BY home_tname");
+
+        echo "<table>";
+        echo "<tr><th>Team Name</th><th>&emsp;Average Home Points</th></tr>";
+
+        while (($row = OCI_Fetch_Array($result, OCI_BOTH)) != false) {
+            echo "<tr><td>" . $row[0] . "</td><td>&emsp;" . $row[1] . "</td></tr>"; //or just use "echo $row[0]"
+        }
+
+        echo "</table>";
+        oci_free_statement($result);
+    }
+
+    function handleLeastRequest()
+    {
+        global $db_conn;
+
+        $result = executePlainSQL("SELECT tname, avg(shooting_perc) as avg_shooting_perc FROM Player_Stats_Only GROUP BY tname");
+
+        $result = executePlainSQL("SELECT a.tname , a.avg_shooting_perc
+        FROM (SELECT tname, avg(shooting_perc) avg_shooting_perc FROM Player_Stats_Only GROUP BY tname) a
+        WHERE a.avg_shooting_perc = (SELECT min(avg_shooting_perc) FROM (SELECT tname, avg(shooting_perc) avg_shooting_perc FROM Player_Stats_Only GROUP BY tname))");
+
+        echo "<table>";
+        echo "<tr><th>Team Name</th><th>&emsp;Average Shooting Percentage</th></tr>";
+
+        while (($row = OCI_Fetch_Array($result, OCI_BOTH)) != false) {
+            echo "<tr><td>" . $row[0] . "</td><td>&emsp;" . $row[1] . "</td></tr>"; //or just use "echo $row[0]"
+        }
+
+        echo "</table>";
+        oci_free_statement($result);
+    }
+
+    function handleLeastViewRequest()
+    {
+        global $db_conn;
+
+        $result = executePlainSQL("WITH a(tname, avg_shooting_perc) as (SELECT tname, avg(shooting_perc) avg_shooting_perc FROM Player_Stats_Only GROUP BY tname)
+        SELECT a.tname , a.avg_shooting_perc
+         FROM a
+         WHERE a.avg_shooting_perc = (SELECT min(avg_shooting_perc) FROM a)");
+
+        echo "<table>";
+        echo "<tr><th>Team Name</th><th>&emsp;Average Shooting Percentage</th></tr>";
+
+        while (($row = OCI_Fetch_Array($result, OCI_BOTH)) != false) {
+            echo "<tr><td>" . $row[0] . "</td><td>&emsp;" . $row[1] . "</td></tr>"; //or just use "echo $row[0]"
+        }
+
+        echo "</table>";
+        oci_free_statement($result);
+    }
+
+    function handleDivRequest()
+    {
+        global $db_conn;
+
+        $result = executePlainSQL("SELECT gid FROM Regular r WHERE NOT EXISTS (
+            (SELECT rf.rid FROM Referee rf WHERE rf.yearsExperience > 20)
+            MINUS
+            (SELECT mr.rid FROM moderate_Regular mr WHERE mr.gid = r.gid))");
+
+        echo "<table>";
+        echo "<tr><th>Game ID</th></tr>";
+
+        while (($row = OCI_Fetch_Array($result, OCI_BOTH)) != false) {
+            echo "<tr><td>" . $row[0] . "</td></tr>"; //or just use "echo $row[0]"
+        }
+
+        echo "</table>";
         oci_free_statement($result);
     }
 
@@ -468,6 +632,21 @@
             if (array_key_exists('countTuples', $_GET)) {
                 handleCountRequest();
             }
+            if (array_key_exists('selectTuples', $_GET)) {
+                handleSelectRequest();
+            }
+            if (array_key_exists('avgTuples', $_GET)) {
+                handleAvgRequest();
+            }
+            if (array_key_exists('leastTuples', $_GET)) {
+                handleLeastRequest();
+            }
+            if (array_key_exists('leastViewTuples', $_GET)) {
+                handleLeastViewRequest();
+            }
+            if (array_key_exists('divTuples', $_GET)) {
+                handleDivRequest();
+            }
 
             disconnectFromDB();
         }
@@ -475,7 +654,8 @@
 
     if (isset($_POST['reset']) || isset($_POST['updateSubmit']) || isset($_POST['insertSubmit'])) {
         handlePOSTRequest();
-    } else if (isset($_GET['countTupleRequest'])) {
+    } else if (isset($_GET['countTupleRequest']) || isset($_GET['selectTupleRequest'])
+     || isset($_GET['avgTupleRequest']) || isset($_GET['leastTupleRequest']) || isset($_GET['divTupleRequest'])) {
         handleGETRequest();
     }
     ?>
