@@ -16,7 +16,7 @@
 
     <hr />
 
-    <h2>Insert Values into Coach</h2>
+    <h2>(Insert Operation) Insert Values into Coach</h2>
     <form method="POST" action="admin.php">
         <!--refresh page when submitted-->
         <input type="hidden" id="insertQueryRequest" name="insertQueryRequest">
@@ -28,7 +28,7 @@
 
     <hr />
 
-    <h2>Update Name in Coach</h2>
+    <h2>(Update Operation) Update Name in Coach</h2>
     <p>The values are case sensitive.</p>
 
     <form method="POST" action="admin.php">
@@ -42,6 +42,19 @@
 
     <hr />
 
+
+    <h2>(Delete Operation) Delete Chris Paul from Player removes Chris Paul's injury as well </h2>
+    <p>Happens when a player retires.</p>
+
+    <form method="POST" action="admin.php">
+        <!--refresh page when submitted-->
+        <input type="hidden" id="deleteQueryRequest" name="deleteQueryRequest">
+
+        <input type="submit" value="Delete" name="deleteSubmit"></p>
+    </form>
+
+    <hr />
+
     <h2>Count the Tuples in Coach</h2>
     <form method="GET" action="admin.php">
         <!--refresh page when submitted-->
@@ -51,7 +64,7 @@
 
     <hr />
 
-    <h2>Find the score for the regular home games where the Lakers won:</h2>
+    <h2>(Selection) Find the score for the regular home games where the Lakers won:</h2>
     <p>SELECT tname, home_pts <br>
         FROM Team_Info, Regular <br>
         WHERE tname = 'Lakers' and home_tname = tname and home_pts > away_pts</p>
@@ -63,7 +76,30 @@
 
     <hr />
 
-    <h2> Find the what the average amount of points each team scored at home:</h2>
+    <h2>(Projection) Find the scores of regular games:</h2>
+    <p>SELECT home_tname, home_pts, away_pts, away_tname <br>
+        FROM Regular </p>
+    <form method="GET" action="admin.php">
+        <!--refresh page when submitted-->
+        <input type="hidden" id="projectTupleRequest" name="projectTupleRequest">
+        <input type="submit" name="projectTuples"></p>
+    </form>
+
+    <hr />
+
+    <h2>(Join) Find the name & number of players who are American by joining the player_team_name/player_stat_only table:</h2>
+    <p>SELECT Player_Team_Name.pname, Player_Team_Name.num <br>
+        FROM Player_Team_Name, Player_Stats_Only <br>
+        WHERE Player_Team_Name.pname = Player_Stats_Only.pname and Player_Team_Name.num = Player_Stats_Only.num and Player_Team_Name.nationality = 'American'</p>
+    <form method="GET" action="admin.php">
+        <!--refresh page when submitted-->
+        <input type="hidden" id="joinTupleRequest" name="joinTupleRequest">
+        <input type="submit" name="joinTuples"></p>
+    </form>
+
+    <hr />
+
+    <h2>(Aggregation) Find the what the average amount of points each team scored at home:</h2>
     <p>SELECT home_tname, avg(home_pts)<br>
         FROM Regular<br>
         GROUP BY home_tname</p>
@@ -75,7 +111,7 @@
 
     <hr />
 
-    <h2> Find which team has the player with the lowest shooting percentage:</h2>
+    <h2>(Nested Aggregation) Find which team has the player with the lowest shooting percentage:</h2>
     <p>SELECT a.tname, a.avg_shooting_perc<br>
     FROM (SELECT tname, avg_shooting_perc = avg(shooting_perc)<br>
     &emsp;&ensp;FROM Player_Stats_Only<br>
@@ -90,7 +126,7 @@
 
     <hr />
 
-    <h2> Find which team has the player with the lowest shooting percentage (With view):</h2>
+    <h2>Find which team has the player with the lowest shooting percentage (With view):</h2>
     <p>WITH a(tname, avg_shooting_perc) as (SELECT tname, avg(shooting_perc) avg_shooting_perc FROM Player_Stats_Only GROUP BY tname)<br>
     SELECT a.tname , a.avg_shooting_perc<br>
     FROM a<br>
@@ -103,7 +139,7 @@
 
     <hr />
 
-    <h2> Find all the games that were officiated by all referees with more than 20 years of experience：</h2>
+    <h2>(Division) Find all the games that were officiated by all referees with more than 20 years of experience：</h2>
     <p> SELECT gid FROM Regular r<br>
     WHERE NOT EXISTS (( SELECT Referee.rid FROM Referee WHERE yearsExperience > 20)<br>
     MINUS<br>
@@ -251,6 +287,20 @@
         oci_free_statement($result);
     }
 
+    function handleDeleteRequest()
+    {
+        global $db_conn;
+
+
+        executePlainSQL("DELETE FROM Player_Stats_Only WHERE pname = 'Chris Paul'");
+        OCICommit($db_conn);
+
+        $result = executePlainSQL("SELECT * FROM Injury");
+        printResult($result);
+
+        oci_free_statement($result);
+    }
+
     function handleResetRequest()
     {
         global $db_conn;
@@ -328,7 +378,8 @@
             age 		int 		NOT NULL,
             shooting_perc 	int, 
             height 		int 		NOT NULL,
-            FOREIGN KEY(tname, num) REFERENCES Player_Team_Name)");
+            FOREIGN KEY(tname, num) REFERENCES Player_Team_Name ON DELETE CASCADE
+            )");
 
         echo "<br> creating Injury table <br>";
         executePlainSQL("CREATE TABLE Injury (
@@ -337,7 +388,7 @@
             severity		int, 		
             body_area 		char(30), 
             PRIMARY KEY(pid, iname),
-            FOREIGN KEY(pid) REFERENCES Player_Stats_Only
+            FOREIGN KEY(pid) REFERENCES Player_Stats_Only ON DELETE CASCADE
             )");
 
         echo "<br> creating Referee table <br>";
@@ -518,6 +569,41 @@
         oci_free_statement($result);
     }
 
+    function handleProjectRequest()
+    {
+        global $db_conn;
+
+        $result = executePlainSQL("SELECT home_tname, home_pts, away_pts, away_tname FROM Regular");
+
+        echo "<table>";
+        echo "<tr><th>Home Team Name</th><th>&emsp;Home Points</th><th>&emsp;Away Points</th><th>Away Team Name</th></tr>";
+
+        while (($row = OCI_Fetch_Array($result, OCI_BOTH)) != false) {
+            echo "<tr><td>" . $row[0] . "</td><td>&emsp;" . $row[1] . "</td><td>&emsp;" . $row[2] . "</td><td>" . $row[3] . "</td></tr>"; //or just use "echo $row[0]"
+        }
+
+        echo "</table>";
+        oci_free_statement($result);
+    }
+
+    function handleJoinRequest()
+    {
+        global $db_conn;
+
+        $result = executePlainSQL("SELECT Player_Team_Name.pname, Player_Team_Name.num <br>
+        FROM Player_Team_Name, Player_Stats_Only WHERE Player_Team_Name.pname = Player_Stats_Only.pname and Player_Team_Name.num = Player_Stats_Only.num and Player_Team_Name.nationality = 'American'");
+
+        echo "<table>";
+        echo "<tr><th>Player Name</th><th>&emsp;Player Number</th></tr>";
+
+        while (($row = OCI_Fetch_Array($result, OCI_BOTH)) != false) {
+            echo "<tr><td>" . $row[0] . "</td><td>&emsp;" . $row[1] . "</td></tr>"; //or just use "echo $row[0]"
+        }
+
+        echo "</table>";
+        oci_free_statement($result);
+    }
+
     function handleAvgRequest()
     {
         global $db_conn;
@@ -616,6 +702,8 @@
                 handleResetRequest();
             } else if (array_key_exists('updateQueryRequest', $_POST)) {
                 handleUpdateRequest();
+            } else if (array_key_exists('deleteQueryRequest', $_POST)) {
+                handleDeleteRequest();
             } else if (array_key_exists('insertQueryRequest', $_POST)) {
                 handleInsertRequest();
             }
@@ -635,6 +723,12 @@
             if (array_key_exists('selectTuples', $_GET)) {
                 handleSelectRequest();
             }
+            if (array_key_exists('projectTuples', $_GET)) {
+              handleProjectRequest();
+            } 
+            if (array_key_exists('joinTuples', $_GET)) {
+              handleJoinRequest();
+            } 
             if (array_key_exists('avgTuples', $_GET)) {
                 handleAvgRequest();
             }
@@ -652,10 +746,10 @@
         }
     }
 
-    if (isset($_POST['reset']) || isset($_POST['updateSubmit']) || isset($_POST['insertSubmit'])) {
+    if (isset($_POST['reset']) || isset($_POST['updateSubmit']) || isset($_POST['deleteSubmit']) || isset($_POST['insertSubmit'])) {
         handlePOSTRequest();
     } else if (isset($_GET['countTupleRequest']) || isset($_GET['selectTupleRequest'])
-     || isset($_GET['avgTupleRequest']) || isset($_GET['leastTupleRequest']) || isset($_GET['divTupleRequest'])) {
+     || isset($_GET['projectTupleRequest']) || isset($_GET['joinTupleRequest']) || isset($_GET['avgTupleRequest']) || isset($_GET['leastTupleRequest']) || isset($_GET['divTupleRequest'])) {
         handleGETRequest();
     }
     ?>
