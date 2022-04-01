@@ -43,14 +43,14 @@
     <hr />
 
 
-    <h2>(Delete Operation) Delete Chris Paul from Player removes Chris Paul's injury as well </h2>
-    <p>Happens when a player retires.</p>
+    <h2>(Delete Operation) Delete Player with ID = 3 from Player_stats_only, removes their injury as well </h2>
+    <p>Happens when a player retires.</p >
 
     <form method="POST" action="admin.php">
         <!--refresh page when submitted-->
         <input type="hidden" id="deleteQueryRequest" name="deleteQueryRequest">
 
-        <input type="submit" value="Delete" name="deleteSubmit"></p>
+        <input type="submit" value="Delete" name="deleteSubmit"></p >
     </form>
 
     <hr />
@@ -88,9 +88,9 @@
     <hr />
 
     <h2>(Join) Find the name & number of players who are American by joining the player_team_name/player_stat_only table:</h2>
-    <p>SELECT Player_Team_Name.pname, Player_Team_Name.num <br>
+    <p>SELECT Player_Team_Name.pname, Player_Team_Name.num ,  Player_Stats_Only.nationality<br>
         FROM Player_Team_Name, Player_Stats_Only <br>
-        WHERE Player_Team_Name.pname = Player_Stats_Only.pname and Player_Team_Name.num = Player_Stats_Only.num and Player_Team_Name.nationality = 'American'</p>
+        WHERE Player_Team_Name.tname = Player_Stats_Only.tname and Player_Team_Name.num = Player_Stats_Only.num and Player_Stats_Only.nationality = 'American'</p>
     <form method="GET" action="admin.php">
         <!--refresh page when submitted-->
         <input type="hidden" id="joinTupleRequest" name="joinTupleRequest">
@@ -111,7 +111,7 @@
 
     <hr />
 
-    <h2>(Nested Aggregation) Find which team has the player with the lowest shooting percentage:</h2>
+    <h2>(Nested Aggregation) Find which team has the players with the lowest shooting percentage:</h2>
     <p>SELECT a.tname, a.avg_shooting_perc<br>
     FROM (SELECT tname, avg_shooting_perc = avg(shooting_perc)<br>
     &emsp;&ensp;FROM Player_Stats_Only<br>
@@ -139,7 +139,7 @@
 
     <hr />
 
-    <h2>(Division) Find all the games that were officiated by all referees with more than 20 years of experience：</h2>
+    <h2>(Division) Find all regular games that were officiated by all referees with more than 20 years of experience：</h2>
     <p> SELECT gid FROM Regular r<br>
     WHERE NOT EXISTS (( SELECT Referee.rid FROM Referee WHERE yearsExperience > 20)<br>
     MINUS<br>
@@ -277,10 +277,17 @@
         $old_name = $_POST['oldcName'];
         $new_name = $_POST['newcName'];
 
+        echo "Before Query:";
+        $result = executePlainSQL("SELECT * FROM coach");
+        printResult($result);
+
+        oci_free_statement($result);
+        echo "<br>";
         // you need the wrap the old name and new name values with single quotations
         executePlainSQL("UPDATE coach SET cname='" . $new_name . "' WHERE cname='" . $old_name . "'");
         OCICommit($db_conn);
-
+        
+        echo "After Query:";
         $result = executePlainSQL("SELECT * FROM coach");
         printResult($result);
 
@@ -291,14 +298,56 @@
     {
         global $db_conn;
 
+        echo "Before Query:";
 
-        executePlainSQL("DELETE FROM Player_Stats_Only WHERE pname = 'Chris Paul'");
-        OCICommit($db_conn);
+        $result = executePlainSQL("SELECT * FROM Player_Stats_Only");
+
+        echo "<table>";
+        echo "<tr><th>Player ID</th><th>Team Name</th></tr>";
+
+        while (($row = OCI_Fetch_Array($result, OCI_BOTH)) != false) {
+            echo "<tr><td>" . $row[0] . "</td><td>" . $row[2] . "</td></tr>"; //or just use "echo $row[0]"
+        }
+
+        echo "</table>";
 
         $result = executePlainSQL("SELECT * FROM Injury");
-        printResult($result);
 
-        oci_free_statement($result);
+        echo "<table>";
+        echo "<tr><th>Player ID</th><th>Injury Name</th></tr>";
+
+        while (($row = OCI_Fetch_Array($result, OCI_BOTH)) != false) {
+            echo "<tr><td>" . $row[0] . "</td><td>" . $row[1] . "</td></tr>"; //or just use "echo $row[0]"
+        }
+
+        echo "</table>";
+        echo "<br>";
+
+        executePlainSQL("DELETE FROM Player_Stats_Only WHERE pid = 3");
+        OCICommit($db_conn);
+
+        echo "After Query:";
+        $result = executePlainSQL("SELECT * FROM Player_Stats_Only");
+
+        echo "<table>";
+        echo "<tr><th>Player ID</th><th>Team Name</th></tr>";
+
+        while (($row = OCI_Fetch_Array($result, OCI_BOTH)) != false) {
+            echo "<tr><td>" . $row[0] . "</td><td>" . $row[2] . "</td></tr>"; //or just use "echo $row[0]"
+        }
+
+        echo "</table>";
+
+        $result = executePlainSQL("SELECT * FROM Injury");
+
+        echo "<table>";
+        echo "<tr><th>Player ID</th><th>Injury Name</th></tr>";
+
+        while (($row = OCI_Fetch_Array($result, OCI_BOTH)) != false) {
+            echo "<tr><td>" . $row[0] . "</td><td>" . $row[1] . "</td></tr>"; //or just use "echo $row[0]"
+        }
+
+        echo "</table>";
     }
 
     function handleResetRequest()
@@ -542,13 +591,20 @@
         $alltuples = array(
             $tuple
         );
+        
+        echo "Before Query:";
+        $result = executePlainSQL("SELECT * FROM coach");
+        printResult($result);
+        echo "<br>";
+        oci_free_statement($result);
 
         executeBoundSQL("insert into coach values (:bind1, :bind2)", $alltuples);
         OCICommit($db_conn);
 
+        
+        echo "After Query:";
         $result = executePlainSQL("SELECT * FROM coach");
         printResult($result);
-
         oci_free_statement($result);
     }
 
@@ -556,9 +612,25 @@
     {
         global $db_conn;
 
+        $result = executePlainSQL("SELECT home_tname, home_pts, away_pts, away_tname FROM Regular");
+
+        echo "<table>";
+        echo "All Regular Games:";
+        echo "<tr><th>Home Team Name</th><th>&emsp;Home Points</th><th>&emsp;Away Points</th><th>Away Team Name</th></tr>";
+
+        while (($row = OCI_Fetch_Array($result, OCI_BOTH)) != false) {
+            echo "<tr><td>" . $row[0] . "</td><td>&emsp;" . $row[1] . "</td><td>&emsp;" . $row[2] . "</td><td>" . $row[3] . "</td></tr>"; //or just use "echo $row[0]"
+        }
+
+        echo "</table>";
+        oci_free_statement($result);
+
+        //
         $result = executePlainSQL("SELECT tname, home_pts FROM Team_Info, Regular WHERE tname = 'Lakers' and home_tname = tname and home_pts > away_pts");
 
         echo "<table>";
+        echo "<br>";
+        echo "Score for the regular home games where the Lakers won:";
         echo "<tr><th>Team Name</th><th>&emsp;Points</th></tr>";
 
         while (($row = OCI_Fetch_Array($result, OCI_BOTH)) != false) {
@@ -590,14 +662,45 @@
     {
         global $db_conn;
 
-        $result = executePlainSQL("SELECT Player_Team_Name.pname, Player_Team_Name.num <br>
-        FROM Player_Team_Name, Player_Stats_Only WHERE Player_Team_Name.pname = Player_Stats_Only.pname and Player_Team_Name.num = Player_Stats_Only.num and Player_Team_Name.nationality = 'American'");
+        $result = executePlainSQL("SELECT pname, num, tname
+        FROM Player_Team_Name ");
+         echo "<table>";
+         echo "Before Query:<br>";
+         echo "Player name, Player number, Team Name from Player_Team_Name:";
+         echo "<tr><th>Player Name</th><th>&emsp;Player Number</th><th>&emsp;Team</th></tr>";
+ 
+         while (($row = OCI_Fetch_Array($result, OCI_BOTH)) != false) {
+             echo "<tr><td>" . $row[0] . "</td><td>&emsp;" . $row[1] . "</td><td>&emsp;" . $row[2] . "</td></tr>"; //or just use "echo $row[0]"
+         }
+ 
+         echo "</table>";
+         oci_free_statement($result);
+         //
+
+         $result = executePlainSQL("SELECT num, tname, nationality
+         FROM Player_Stats_Only ");
+          echo "<table>";
+          echo "<br>Player number, Team name, and Nationality from Player_Stats_Only:";
+          echo "<tr><th>Player Number</th><th>&emsp;Team</th><th>&emsp;Nationality</th></tr>";
+  
+          while (($row = OCI_Fetch_Array($result, OCI_BOTH)) != false) {
+              echo "<tr><td>" . $row[0] . "</td><td>&emsp;" . $row[1] . "</td><td>&emsp;" . $row[2] . "</td></tr>"; //or just use "echo $row[0]"
+          }
+  
+          echo "</table>";
+          oci_free_statement($result);
+          //
+
+        $result = executePlainSQL("SELECT Player_Team_Name.pname, Player_Team_Name.num ,  Player_Stats_Only.nationality
+        FROM Player_Team_Name, Player_Stats_Only WHERE Player_Team_Name.tname = Player_Stats_Only.tname and Player_Team_Name.num = Player_Stats_Only.num and Player_Stats_Only.nationality = 'American'");
 
         echo "<table>";
-        echo "<tr><th>Player Name</th><th>&emsp;Player Number</th></tr>";
+        echo "<br>";
+        echo "After Query:<br> All American players:";
+        echo "<tr><th>Player Name</th><th>&emsp;Player Number</th><th>&emsp;Nationality</th></tr>";
 
         while (($row = OCI_Fetch_Array($result, OCI_BOTH)) != false) {
-            echo "<tr><td>" . $row[0] . "</td><td>&emsp;" . $row[1] . "</td></tr>"; //or just use "echo $row[0]"
+            echo "<tr><td>" . $row[0] . "</td><td>&emsp;" . $row[1] . "</td><td>&emsp;" . $row[2] . "</td></tr>"; //or just use "echo $row[0]"
         }
 
         echo "</table>";
@@ -626,12 +729,24 @@
         global $db_conn;
 
         $result = executePlainSQL("SELECT tname, avg(shooting_perc) as avg_shooting_perc FROM Player_Stats_Only GROUP BY tname");
+        echo "<table>";
+        echo "Each team's players average shooting percentage:";
+        echo "<tr><th>Team Name</th><th>&emsp;Average Shooting Percentage</th></tr>";
+
+        while (($row = OCI_Fetch_Array($result, OCI_BOTH)) != false) {
+            echo "<tr><td>" . $row[0] . "</td><td>&emsp;" . $row[1] . "</td></tr>"; //or just use "echo $row[0]"
+        }
+
+        echo "</table>";
+        oci_free_statement($result);
 
         $result = executePlainSQL("SELECT a.tname , a.avg_shooting_perc
         FROM (SELECT tname, avg(shooting_perc) avg_shooting_perc FROM Player_Stats_Only GROUP BY tname) a
         WHERE a.avg_shooting_perc = (SELECT min(avg_shooting_perc) FROM (SELECT tname, avg(shooting_perc) avg_shooting_perc FROM Player_Stats_Only GROUP BY tname))");
 
         echo "<table>";
+        echo "<br>";
+        echo "The team with the lowest players average shooting percentage:";
         echo "<tr><th>Team Name</th><th>&emsp;Average Shooting Percentage</th></tr>";
 
         while (($row = OCI_Fetch_Array($result, OCI_BOTH)) != false) {
@@ -666,12 +781,35 @@
     {
         global $db_conn;
 
+        $result = executePlainSQL("SELECT * FROM moderate_Regular");
+        echo "<table>";
+        echo "Regular Games table and Referee Table:";
+        echo "<tr><th>Game ID</th><th>&emsp;Referee ID</th></tr>";
+
+        while (($row = OCI_Fetch_Array($result, OCI_BOTH)) != false) {
+            echo "<tr><td>" . $row[0] . "</td><td>&emsp;" . $row[1] . "</td></tr>"; //or just use "echo $row[0]"
+        }
+        echo "</table>";
+        oci_free_statement($result);
+
+        $result = executePlainSQL("SELECT * FROM Referee");
+        echo "<table>";
+        echo "<tr><th>Referee ID</th><th>&emsp;Years of Experience</th></tr>";
+
+        while (($row = OCI_Fetch_Array($result, OCI_BOTH)) != false) {
+            echo "<tr><td>" . $row[0] . "</td><td>&emsp;" . $row[1] . "</td></tr>"; //or just use "echo $row[0]"
+        }
+        echo "</table>";
+        oci_free_statement($result);        
+
         $result = executePlainSQL("SELECT gid FROM Regular r WHERE NOT EXISTS (
             (SELECT rf.rid FROM Referee rf WHERE rf.yearsExperience > 20)
             MINUS
             (SELECT mr.rid FROM moderate_Regular mr WHERE mr.gid = r.gid))");
 
         echo "<table>";
+        echo "<br>";
+        echo "After Query:";
         echo "<tr><th>Game ID</th></tr>";
 
         while (($row = OCI_Fetch_Array($result, OCI_BOTH)) != false) {
@@ -685,6 +823,10 @@
     function handleCountRequest()
     {
         global $db_conn;
+
+        $result = executePlainSQL("SELECT * FROM coach");
+        printResult($result);
+        oci_free_statement($result);
 
         $result = executePlainSQL("SELECT Count(*) FROM coach");
 
