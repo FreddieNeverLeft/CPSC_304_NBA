@@ -116,7 +116,7 @@
     FROM (SELECT tname, avg_shooting_perc = avg(shooting_perc)<br>
     &emsp;&ensp;FROM Player_Stats_Only<br>
     &emsp;&ensp;GROUP BY tname<br>
-    ) AS a<br>
+    ) a<br>
     WHERE a.avg_shooting_perc = (SELECT min(avg_shooting_perc) FROM (SELECT tname, avg(shooting_perc) avg_shooting_perc FROM Player_Stats_Only GROUP BY tname)) </p>
     <form method="GET" action="admin.php">
         <!--refresh page when submitted-->
